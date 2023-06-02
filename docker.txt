@@ -73,3 +73,67 @@
 
 	- docker search expressjs
 
+4] Setting up a private docker registry
+
+- echo "export DCKREG=dockerserver.home" >> ~/.bash_profile
+
+- source ~/.bash_profile
+
+- echo "192.168.1.100 $DCKREG" >>  /etc/hosts
+
+- cd; mkdir -p ~/certs; openssl req -newkey rsa:4096 -nodes -sha256 
+	-keyout certs/domain.key -x509 -days 365 -out certs/domain.crt
+	
+- mkdir -p /etc/docker/certs.d/$DCKREG\:5000
+
+- cp  ~/certs/domain.crt /etc/docker/certs.d/$DCKREG\:5000/ca.crt
+
+- cp ~/certs/domain.crt /etc/pki/ca-trust/source/anchors/docker-registry.crt
+	update-ca-trust
+- cp ~/certs/domain.crt /var/www/html/docker-registry.crt
+
+- mkdir ~/auth; touch ~/auth/htpasswd docker run -d -p 5000:5000 --restart=always 
+	 --name registry -v /
+	 root/certs:/certs -v /root/auth:/auth 
+	 -v /reg:/var/lib/registry 
+	 -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt -e
+	 REGISTRY_HTTP_TLS_KEY=/certs/domain.key 
+	 -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" 
+	 -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd 
+	 -e REGISTRY_AUTH=htpasswd registry:2
+
+- docker logs registry
+
+- cd; docker run -it --entrypoint htpasswd -v $PWD/auth:/auth 
+	-w /auth registry:2 -Bbc /auth/htpasswd johndoe mysecretpassword
+	
+- docker restart registry
+
+- sed 's/80/5000/g' /usr/lib/firewalld/services/http.xml | 
+	sed 's/WWW (HTTP)/Docker registry/g' | 
+	sed 's/<description>.*<\/description>//g' 
+	> /etc/firewalld/services/docker-reg.xml
+	
+- firewall-cmd --reload
+
+- firewall-cmd --permanent --add-service=docker-reg; firewall-cmd --reload
+
+- yum update && curl -sSL https://get.docker.com/ | sh
+
+- mkdir -p /etc/docker/certs.d/$DCKREG\:5000
+curl http://$DCKREG/docker-registry.crt -o /tmp/cert.crt
+cp /tmp/cert.crt /etc/docker/certs.d/$DCKREG\:5000/ca.crt
+cp /tmp/cert.crt /etc/pki/ca-trust/source/anchors/docker-registry.crt
+update-ca-trust
+
+- docker login
+
+- docker pull busybox
+
+- docker login $DCKREG:5000
+
+- docker tag busybox $DCKREG:5000/busybox
+
+- docker push $DCKREG:5000/busybox
+
+- curl https://johndoe:mysecretpassword@$DCKREG:5000/v2/_catalog
