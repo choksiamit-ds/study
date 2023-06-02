@@ -1,59 +1,1211 @@
 
- Tables :  filter   nat   mangle   raw   
+ Tables :   filter   nat   mangle   raw   
 
 
- Options :  -A(append)   -I(insert)   -D(delete)   -R(replace)   
--F(flush)   -Z(zero)   -L(list)   -S(show)   
--N   -X   
+ Options :   -A(append)   -I(insert)   -D(delete)   
+ -R(replace)   
+ -F(flush)   -Z(zero)   
+ -L(list)   -S(show)   
+ -N    -X   
 
- Chains :  INPUT   OUTPUT   FORWARD   PRE_ROUTING   
+ Chains :   INPUT   OUTPUT   FORWARD   PRE_ROUTING   
 POST_ROUTING   USER_DEFINED   
 
- Matches :  -s source_ip   -d dest_ip   -p protocol   --sport source_p   
---dport dest_p   -p icmp   --icmp-type   -i incoming_intf   
--o outgoing_intf   -m mac   -m time   -m quota   
--m limit   -m recent   
+ Matches :   -s source_ip    -d dest_ip   -p protocol   --sport source_p   
 
- Target/Jump :  ACCEPT   DROP   REJECTLOG   SNAT   
-DNAT   MASQUERATE   LIMITTEE   TOS   
-TTL   
+ --dport dest_p   -p icmp   --icmp-type   
+ -i incoming_intf   
+ -o outgoing_intf   
+ -m mac   -m time   -m quota   
+
+ -m limit   
+ -m recent   
+
+ Target/Jump :   ACCEPT   DROP   REJECT
+ LOG   SNAT   
+
+ DNAT   MASQUERATE   LIMIT
+ TEE   TOS   
+
+ TTL   
+
+iptables v1.4.21
+
+Usage: iptables -[ACD] chain rule-specification [options]
+       iptables -I chain [rulenum] rule-specification [options]
+       iptables -R chain rulenum rule-specification [options]
+       iptables -D chain rulenum [options]
+       iptables -[LS] [chain [rulenum]] [options]
+       iptables -[FZ] [chain] [options]
+       iptables -[NX] chain
+       iptables -E old-chain-name new-chain-name
+       iptables -P chain target [options]
+       iptables -h (print this help information)
+
+Commands:
+Either long or short options are allowed.
+  --append  -A chain		Append to chain
+  --check   -C chain		Check for the existence of a rule
+  --delete  -D chain		Delete matching rule from chain
+  --delete  -D chain rulenum
+				Delete rule rulenum (1 = first) from chain
+  --insert  -I chain [rulenum]
+				Insert in chain as rulenum (default 1=first)
+  --replace -R chain rulenum
+				Replace rule rulenum (1 = first) in chain
+  --list    -L [chain [rulenum]]
+				List the rules in a chain or all chains
+  --list-rules -S [chain [rulenum]]
+				Print the rules in a chain or all chains
+  --flush   -F [chain]		Delete all rules in  chain or all chains
+  --zero    -Z [chain [rulenum]]
+				Zero counters in chain or all chains
+  --new     -N chain		Create a new user-defined chain
+  --delete-chain
+            -X [chain]		Delete a user-defined chain
+  --policy  -P chain target
+				Change policy on chain to target
+  --rename-chain
+            -E old-chain new-chain
+				Change chain name, (moving any references)
+Options:
+    --ipv4	-4		Nothing (line is ignored by ip6tables-restore)
+    --ipv6	-6		Error (line is ignored by iptables-restore)
+[!] --protocol	-p proto	protocol: by number or name, eg. `tcp'
+[!] --source	-s address[/mask][...]
+				source specification
+[!] --destination -d address[/mask][...]
+				destination specification
+[!] --in-interface -i input name[+]
+				network interface name ([+] for wildcard)
+ --jump	-j target
+				target for rule (may load target extension)
+  --goto      -g chain
+                              jump to chain with no return
+  --match	-m match
+				extended match (may load extension)
+  --numeric	-n		numeric output of addresses and ports
+[!] --out-interface -o output name[+]
+				network interface name ([+] for wildcard)
+  --table	-t table	table to manipulate (default: `filter')
+  --verbose	-v		verbose mode
+  --wait	-w		wait for the xtables lock
+  --line-numbers		print line numbers when listing
+  --exact	-x		expand numbers (display exact values)
+[!] --fragment	-f		match second or further fragments only
+  --modprobe=<command>		try to insert modules using this command
+  --set-counters PKTS BYTES	set the counter during insert/append
+[!] --version	-V		print package version.
+
+time match options:
+    --datestart time     Start and stop time, to be given in ISO 8601
+    --datestop time      (YYYY[-MM[-DD[Thh[:mm[:ss]]]]])
+    --timestart time     Start and stop daytime (hh:mm[:ss])
+    --timestop time      (between 00:00:00 and 23:59:59)
+[!] --monthdays value    List of days on which to match, separated by comma
+                         (Possible days: 1 to 31; defaults to all)
+[!] --weekdays value     List of weekdays on which to match, sep. by comma
+                         (Possible days: Mon,Tue,Wed,Thu,Fri,Sat,Sun or 1 to 7
+                         Defaults to all weekdays.)
+    --kerneltz           Work with the kernel timezone instead of UTC
 
 
- Basic Usage: 
+
+
+
+
+ 1) Basic Usage: 
+
  iptables [-t table_name]-COMMAND CHAIN_NAME matches -j TARGET
 
 
- Drop ICMP echo packets: 
- iptables -t filter -A INPUT -p icmp --icmp-type echo -j DROP
+ 2) Drop ICMP echo packets: 
+
+ iptables -t  filter -A  INPUT -p icmp --icmp-type echo -j DROP
 
 
- Print all iptables: 
+ 3) Print all iptables: 
+
  iptables -nvL
 
 
- Drop outgoing http traffic to specific target
+ 4) Drop outgoing http traffic to specific target
+
  iptables -t filter -A OUTPUT -p tcp --dport 80 -d www.ubuntu.com -j DROP
  iptables -t filter -A OUTPUT -p tcp --dport 443 -d www.ubuntu.com -j DROP
 
 
- Drop smtp incoming traffic on 1.1.1.1
+ 5) Drop smtp incoming traffic on 1.1.1.1
+
  iptables -A INPUT -p tcp --dport 25 -j DROP
 
 
- Scan the port using nmap from another machine
+ 6) Scan the port using nmap from another machine
+
  nmap -p 25 1.1.1.1
 
 
- Drop incoming traffic tftp 69 port insert at pos 0
+ 7) Drop incoming traffic tftp 69 port insert at pos 0
+
  iptables -I INPUT -p udp --dport 69 -j DROP
 
 
- Drop incoming traffic tftp 69 port insert on 3rd position
+ 8) Drop incoming traffic tftp 69 port insert on 3rd position
+
  iptables -I INPUT 3 -p udp --dport 69 -j DROP
 
 
- List all rules
- iptables -nvL iptables -L iptables -nL
+ 9) List all rules
+
+ iptables -nvL
+ iptables -L
+ iptables -nL
+
+
+ 10) Zero all counters in all or a specific chain
+
+ iptables -Z
+
+
+ 11) New custom chain
+
+ iptables -N MYCHAIN
+
+
+ 12) Delete custom chain
+
+ iptables -X MYCHAIN
+
+
+ 13) Set default policy for INPUT OUTPUT and FORWARD (catch all),
+     cannot be set for other chains
+
+ iptables -P INPUT DROP
+ iptables -P FORWARD DROP
+ iptables -P OUTPUT
+
+
+ 14) Delete 2nd rule in output chain
+
+ iptables -D OUTPUT 2
+
+
+ 15) Simple firewall script to drop incoming ssh traffic and 
+ outgoing http, https traffic
+
+ #!/bin/bash 
+ iptables -F INPUT
+ iptables -F OUTPUT
+ iptables -F # flushes all chains
+ iptables -A INPUT -p tcp --dport 22 -j DROP
+ iptables -A OUTPUT -p tcp --dport 80 -j DROP
+ iptables -A OUTPUT -p tcp --dport 443 -j DROP
+
+ # changes source address to a public ip for all outgoing packets leaving 10.0.0.0/8 subnet
+ iptables -t nat -A POSTROUTING -s 10.0.0.0/8 -o enp0s3 -j SNAT --to-source 80.0.0.1
+
+
+ 16) Allow ssh traffic from only 1 ip
+
+ #!/bin/bash 
+ iptables -t filter -A INPUT -p tcp --dport 22 -s 192.168.0.20 -j ACCEPT 
+ iptables -t filter -A INPUT -p tcp --dport 22 -j DROP
+
+
+ 17) List INPUT chain from filter table
+
+ iptables -vnL INPUT
+
+
+ 18) List nat table from all chains
+
+ iptables -t nat -vnL 
+
+
+ 19)  iptables options -n and -v -L
+
+ -v verbose -n numeric -L list
+
+
+ 20) List all tables seperately
+
+ iptables -t filter -vnL 
+ iptables -t raw -vnL 
+ iptables -t mangle -vnL 
+ iptables -t nat -vnL 
 
 
 
+ 21) Strategy
+
+ Default policy to drop all packets 
+ Allow only specific packets 
+ iptables -P INPUT DROP
+
+
+ 22) Strategy
+
+ Default policy to allow all packets
+ Drop only specific packets 
+ iptables -P INPUT ACCEPT
+
+
+ 23) Firewall script default state restore
+
+ iptables -P INPUT ACCEPT 
+ iptables  -P OUTPUT ACCEPT 
+ iptables  -P FORWARD ACCEPT 
+ iptables  -t filter -F 
+ iptables  -t raw -F 
+ iptables  -t mangle  -F 
+ iptables  -t nat -F 
+ iptables  -X
+
+
+ 24) Store iptables in a file or stdout
+
+ iptables-save
+
+
+ 25) Restore iptables from a file
+
+ iptables-restore
+
+
+ 26) Persistent iptables
+
+ sudo apt update&& sudo apt install iptables-persistent
+ iptables-save > /etc/iptables/rules.v4 
+
+
+
+ 27) Redhat
+
+ /sbin/service iptables save
+ writes to /etc/sysconfig/iptables
+
+
+ 28) Challenge: default policy to accept input / output chains drop forward chain
+
+ iptables -P INPUT ACCEPT 
+ iptables -P OUTPUT ACCEPT 
+ iptables -P FORWARD DROP
+
+
+ 29) Challenge: list filter table of output chain
+
+ iptables -t filter OUTPUT -nvL
+
+
+ 30) Challenge: list nat table 
+
+ iptables -t nat -nvL
+
+
+ 31) Challenge: flush filter table for all chains 
+
+ iptables -F -t filter
+
+
+ 32) Challenge: drop incoming packets to port 22 
+ first in the chain
+
+ iptables -t filter -I INPUT -p tcp --dport 22 -j DROP
+
+
+ 33) Challenge: Flush all tables all chains and default policy accept
+
+ iptables -F 
+ iptables -P INPUT ACCEPT 
+ iptables -P OUTPUT ACCEPT 
+ iptables -P FORWARD ACCEPT 
+
+
+ 34) Match by source ip or network addr
+
+ iptables -f filter -A INPUT -s 100.0.0.0/16 -j DROP
+
+
+ 35) Match by destination IP or network addr
+
+ iptables -f filter -A FORWARD -d 80.0.0.1 -j DROP 
+ iptables -f filter -A OUTPUT -d www.ubuntu.com -j DROP #not a good idea 
+ system dns lookup will populate the iptables with the resolved IPs 
+ domains like fb or google have 10s or 100s of ip address 
+ instead use ipset tool 
+
+
+ 36) Get IP Addresses for a domain
+
+ nslookup www.google.com 
+ dig www.google.com 
+ may return different IPs in each lookup
+
+
+ 37) Filter by ip range and address type
+
+ easier to manage iptables with less entries by utilizing a range or addrtype 
+ iptables -A INPUT -m iprange --src-range 10.0.0.10-10.0.0.29 -p tcp --dport 25 -j DROP
+ iptables -A OUTPUT -m iprange --dest-range 10.0.0.10-10.0.0.29 -p tcp --dport 25 -j DROP
+ iptables -A OUTPUT -m addrtype --src-type UNICAST -j DROP 
+ iptables -A OUTPUT -m addrtype --src-type BROADCAST -j DROP 
+ iptables -A OUTPUT -m addrtype --dst-type MULTICAST -j DROP 
+
+
+ 38) Filter by TCP or UDP port, multiports
+
+ iptables -A INPUT -p tcp --dport 22 -j DROP 
+ iptables -A OUTPUT -p tcp -m multiport --dports 80,443 -j DROP 
+ iptables -A INPUT -p tcp -m multiport --sports 25,26 -j DROP 
+ 
+
+
+ 39) Port scan ,Find if a port is filtered / or closed
+
+ nmap -p 55 192.168.0.20 
+ state of port can be OPEN CLOSED or FILTERED 
+ 
+
+
+ 40) nmap port scan output when action is DROP
+
+ nmap shows the port as filtered
+  
+ 
+
+
+ 41) Check all l3-l4 protocols to use it as a criteria in an iptables rule
+
+ cat /etc/protocols 
+ -p option followed by protocol name 
+ 
+ iptables -F 
+ iptables -P INPUT DROP 
+ iptables -P OUTPUT DROP 
+ iptables -A INPUT -i lo -j ACCEPT 
+ iptables -A OUTPUT -i lo -j ACCEPT 
+ iptables -A INPUT -p tcp -j ACCEPT 
+ iptables -A OUTPUT -p udp -j ACCEPT 
+ iptables -A INPUT -p udp -j ACCEPT 
+ iptables -A OUTPUT -p tcp -j ACCEPT 
+  
+ 
+
+
+ 42) Match by incoming interface Available for input forward and prerouting chains
+
+ iptables -A INPUT -i wlan0 -j ACCEPT
+ iptables -A INPUT -i wlan+ -j ACCEPT
+
+
+ 43) Match by outgoing interface Available for output forward and postrouting chains
+
+ iptables -A OUTPUT -o enp8sp0 -j ACCEPT
+
+
+ 44) Iptables rule using negation
+
+ iptables -A INPUT ! -s 192.168.0.112 -p tcp --dport 443 -j DROP
+
+
+ 45) Match by TCP flags --syn --tcp-flags mask comp
+
+ iptables -A INPUT -i wlan0 -p tcp --syn -s 10.0.0.1 -j ACCEPT
+
+
+ 46) TCP Flags
+
+SYN 
+ ACK 
+ FIN 
+ RST 
+ URG 
+ PSH 
+ ALL 
+ NONE
+
+
+ 47) Block only connection that initializes a connection 
+ nmap -p 22 linux-1ip
+
+ iptables -A INPUT -p tcp --dport 22 --syn -j DROP
+
+
+ 48) Block all except permitted ips
+
+ iptables -vnL iptables -A INPUT -p tcp --dport 22 ! -s 192.168.0.11 --syn -j DROP
+
+
+ 49) Log all outgoing TCP traffic
+
+ iptables -A OUTPUT -p tcp --tcp-flags syn,ack,rst,fin syn,ack -j LOG
+
+
+ 50) Challenge 1 Write the iptables rules that drop 
+ all incoming packets from 100.0.0.1 and 1.2.3.4 and all 
+outgoing packets to 80.0.0.1
+
+ iptables -I INPUT -s 100.0.0.1 -j DROP iptables -I INPUT -s 1.2.3.4  -j DROP  iptables -I OUTPUT -d 80.0.0.1 -j DROP 
+
+
+ 51)  Write the iptables rules that drop all outgoing generated packets of type tcp (port 80 and 443) to www.linuxquestions.org
+
+ iptables -A OUTPUT -d www.linuxquestions.org --dport 40 -p tcp -j DROP 
+ iptables -A OUTPUT -d www.linuxquestions.org --dport 443 -p tcp -j DROP 
+ iptables -A OUTPUT -p tcp -d www.linuxquestions.org -m multiport --dports 40,443 -j DROP 
+
+
+ 52)  Write the iptables rules that drop all outgoing packets of type tcp (port 80 and 443) to www.linuxquestions.org
+
+ iptables -A OUTPUT -p tcp -d www.linuxquestions.org -m multiport --dports 40,443 -j DROP 
+ iptables -A FORWARD -p tcp -d www.linuxquestions.org -m multiport --dports 40,44    3 -j DROP
+
+
+ 53)  Write an iptables rule that drops all incoming packets from network 27.103.0.0 255.255.0.0
+
+ iptables -A INPUT -m iprange -s 27.103.0.0\/8  -j DROP 
+ iptables -A INPUT -m iprange -s 255.255.0.0\/8  -j DROP 
+
+
+ 54)  Write an iptables rule in order to drop all UDP packets to port 53 (DNS) if they are destined to another IP address (not to 8.8.8.8). The Linux Machine is the Router.
+
+ iptables -A OUTPUT ! -d 8.8.8.8 --dport 53 -j DROP
+
+
+ 55)  Write the iptables rules that allow all traffic of the loopback (lo) interface.
+
+ iptables -A INPUT -i lo -j ACCEPT 
+ iptables -A OUTPUT -i lo -j ACCEPT
+
+
+ 56)  Your Linux Machine is the router. The internal interface is called eth0 and the external interface is called eth1.  Write the iptables rules that allow establishing incoming ssh (tcp/22) connections only from the LAN.
+
+ iptables -A INPUT -p tcp --dport 22 ! -i eth0 -j DROP
+
+
+ 57)  Connection tracking = stateful firewall
+
+ NEW 
+ ESTABLISHED 
+ RELATED 
+ INVALID 
+ UNTRACKED
+
+
+ 58)  Connection tracking -m state --state
+
+ iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+
+ 59) stateful firewall, allow incoming connection only from 1 ip
+
+ iptables -F 
+ iptables -A INPUT -i lo -j ACCEPT 
+ iptables -A OUTPUT -i lo -j ACCEPT 
+ 
+ iptables -A INPUT -m state --state INVALID -j DROP 
+ iptables -A OUTPUT -m state --state INVALID -j DROP 
+ 
+ iptables -A INPUT -s 192.168.0.0/24 -j ACCEPT # LAN subnet allowed 
+ iptables -A INPUT -m state --state NEW -p tcp --dport 22 -s 192.167.0.1 -j ACCEPT 
+ iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT 
+ iptables -A OUTPUT -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT 
+ iptables -P INPUT DROP 
+ iptables -P OUTPUT DROP
+
+
+ 60) Filter by source MAC Address, cannot impose a strong security policy based on mac address 
+ as it can be easily spoofed
+
+ iptables -A INPUT -i wlan0 -m mac --mac-source 09:00:27:55:6f:20 -j DROP
+
+
+ 61) NAT Firewall
+
+ iptables -F FORWARD 
+ PERMITTED_MACS='X Y Z A' 
+ for MAC in $PERMITTED_MACS 
+ do 
+	iptables -A FORWARD -m mac --mac-source $MAC -j ACCEPT 
+	echo $MAC permitted 
+ done 
+ 
+ iptables -P FORWARD DROP 
+
+
+ 62) Filter by date and time command
+
+ -m time --datestart --datestop 
+ --timestart --timestop --monthdays --weekdays --kernelz
+
+
+ 63) Filter by date and time 
+
+ #10am and 4pm on weekdays 
+ 
+ iptables -F 
+ iptables -A INPUT -p tcp --dport 22 -m time --timestart 10:00 --timestart 16:00 -j ACCEPT 
+ IPTABLES -A INPUT -p tcp --dport 22 -j DROP 
+ iptables -vnL 
+ 
+ #access to a specific website after working hours 
+ #to www.ubuntu.com on workdays between 18:00-08:00 
+ #
+ iptables -A FORWARD -p tcp --dport 443 -d www.ubuntu.com -m time --timestart 18:00 --timestop 8:00 -j ACCEPT  
+ iptables -A FORWARD -p tcp --dport 443 -d www.ubuntu.com -j DROP  
+ 
+ iptables -A FORWARD -p tcp --dport 80 -d www.ubuntu.com -m time --weekdays Mon,Tue,Wed,Thu,Fri  
+--timestart 18:00 --timestop 8:00 -j ACCEPT 
+
+
+
+ 64) Connlimit match
+
+ #-m connlimit option 
+ --conlimit-upto n 
+ --connlimit-above n   
+ 
+ iptables -A INPUT -p tcp --dport 25 --syn -m connlimit --connlimit-above 5 -j REJECT 
+\ 
+  --reject-with tcp-rst 
+
+
+
+ 65) Limit match
+
+ #-m limit option --limit-burst value 
+ after the limit-burst , limit kicks in  
+ 
+ iptables -A FORWARD -m limit --limit 1/minute -p udp --dport 53 -j LOG 
+ iptables -A INPUT -p tcp --syn -m limit --limit 2/s --limit-burst 
+  7 -j ACCEPT 
+ 
+ iptables -A INPUT -p icmp --icmp-type echo-request -m limit --limit 1/sec --limit-burst 7 -j DROP 
+ iptables -A INPUT -p icmp --icmp-type echo-request -j DROP 
+
+
+
+ 66) Dynamic list of blacklisted IP addresses
+
+ --name creates a list where source addresses will be added 
+ --set sets source ip address 
+ --update checks if the source ip address is in the list and updates last seen time 
+ --rcheck checks if source ip address is in the list and doesnt update last seen time  
+ --seconds matches only if the source ip address is in the list and last seen time is valid 
+ 
+ iptables -A FORWARD -m recent --name badguys --update --seconds 60 -j DROP
+ iptables -A FORWARD -p tcp -i eth0 --dport 8080 -m recent --name badguys -set -j DROP
+
+
+
+ 67) Dynamic blacklist based on time of the day
+
+ if more than 1 packets come in 1 second then drop 
+ if packets come within a specific time interval then  
+  create a list hackers if not already there and add the ip and drop 
+ 
+ iptables -F 
+ iptables -A INPUT -m recent --name hackers --update --seconds 60 0j DROP 
+ iptables -A INPUT -p tcp --dport 26 -m time --timestart 8:00 --timestop 22:00 -m recent --name hackers --set -j DROP 
+
+
+
+ 68) Quota match 
+
+ -m quota --quota bytes 
+ 
+ iptables -A OUTPUT -d 80.0.0.1 -p tcp --sport 80 -m quota 
+  --quota 1000000000 -j ACCEPT 
+ IPTABLES -A OUTPUT -d 80.0.0.1 -p tcp --sport 80 -j DROP 
+ 
+ iptables -A INPUT -S 192.168.0.20 -p tcp --dport 22 -m quota --quota 100000000 -j ACCEPT 
+ iptables -A INPUT -S 192.168.0.20 -p tcp --dport 22  -j DROP 
+ 
+
+
+
+ 69)  Help Options for time mac and limit match 
+
+  time match options:
+    --datestart time     Start and stop time, to be given in ISO 8601
+    --datestop time      (YYYY[-MM[-DD[Thh[:mm[:ss]]]]])
+    --timestart time     Start and stop daytime (hh:mm[:ss])
+    --timestop time      (between 00:00:00 and 23:59:59)
+[!] --monthdays value    List of days on which to match, separated by comma
+                         (Possible days: 1 to 31; defaults to all)
+[!] --weekdays value     List of weekdays on which to match, sep. by comma
+                         (Possible days: Mon,Tue,Wed,Thu,Fri,Sat,Sun or 1 to 7
+                         Defaults to all weekdays.)
+    --kerneltz           Work with the kernel timezone instead of UTC
+
+
+ limit match options:
+ --limit avg     max average match rate: default 3/hour
+                                 [Packets per second unless followed by
+                                 /sec /minute /hour /day postfixes]
+ --limit-burst number    number to match in a burst, default 5
+
+
+ mac match options:
+ [!] --mac-source XX:XX:XX:XX:XX:XX
+				Match source MAC address
+
+
+ 
+
+
+ 70) Create a firewall script for your Laptop what runs Linux. All outgoing traffic is allowed but only the return incoming traffic is permitted. No services are running on the laptop. 
+
+ iptables -F 
+ iptables -P OUTPUT ACCEPT
+ iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+
+
+ 71) 
+ Consider Challenge #2. Make sure that you also:
+
+ - allow the loopback interface traffic (lo)
+ - drop invalid packets
+ - flush the firewall at the beginning of the script
+
+
+
+ iptables -F
+
+ iptables -A INPUT -i lo -j ACCEPT
+ iptables -A OUTPUT -i lo -j ACCEPT
+
+ iptables -A INPUT -m state --state INVALID -j DROP
+ iptables -A OUTPUT -m state --state INVALID -j DROP
+
+
+
+ 72) 
+ You start the SSH Daemon on your laptop and want to allow incoming SSH connections (tcp/22) only from your work (IP address: 100.0.0.1).
+
+
+
+ iptables -A INPUT -p tcp --dport 22 -s 100.0.0.1 -j ACCEPT
+ iptables -A INPUT -p tcp --dport 22  -j DROP
+
+
+
+ 73)  The MAC Address of the LAN Router is b4:6d:83:77:85:f5
+
+ Write a single iptables rule that allows the communication of your Linux host only with the router. It cannot communicate with other hosts inside the same LAN. Do not modify the policy.
+
+
+ iptables -F
+ iptables -A INPUT -m mac --mac-source=b4:6d:83:77:85:f5 -j ACCEPT
+ iptables -P INPUT DROP
+ iptables -P OUTPUT DROP
+
+
+
+ 74)  You have a LAN with a server and 5 hosts. The MAC addresses of the hosts are: b4:6d:83:77:85:f1 b4:6d:83:77:85:f2 b4:6d:83:77:85:f3 b4:6d:83:77:85:f4 b4:6d:83:77:85:f5
+
+ Write an iptables script on the server that allows only the communication with those 5 hosts. No other host is allowed to communicate with the server.
+
+
+ iptables -F
+ PERMITTED_MACS=' b4:6d:83:77:85:f1 b4:6d:83:77:85:f2 b4:6d:83:77:85:f3 b4:6d:83:77:85:f4 b4:6d:83:77:85:f5'
+ for MAC in $PERMITTED_MACS
+ do 
+	 iptables -A INPUT -m mac --mac-source $MAC -j ACCEPT
+	 iptables -A OUTPUT -m mac --mac-source $MAC -j ACCEPT
+ done
+
+ iptables -P INPUT DROP
+
+
+
+ 75)  Write the iptables rules that permit outgoing web traffic (tcp ports 80 and 443) only between 10:00 and 18:00 UTC.
+
+
+ iptables -F
+ iptables -A OUTPUT -p tcp -m multiport --dports 80,443 -m time --timestart 10:00 --timestop 18:00 -j ACCEPT
+ iptables -P OUTPUT DROP
+
+
+
+ 76)  Consider Challenge #7. Add a match to allow web traffic only on the weekend between 10:00 and 18:00 UTC.  
+
+ iptables -A OUTPUT -p tcp -m multiport --sports 80,443 -m -m time --weekdays Fri,Sat -j ACCEPT
+ iptables -A INPUT -p tcp -m multiport --dports 80,443 -m -m time --weekdays Fri,Sat -j ACCEPT
+ iptables -P INPUT DROP
+ iptables -P OUTPUT DROP 
+
+
+ 77)  Write the iptables rules that permit only 2 incoming ICMP echo-request (ping) packets per second from any IP address.
+
+
+
+ iptables -A INPUT -p icmp --icmp-type echo-request -m limit --limit 2/sec -j ACCEPT
+ iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+
+
+
+ 78)  Write an iptables rule that permits only 10 NEW TCP connections from the same IP address.  
+
+ iptables -A INPUT -m recent --name badguys --update  -j LOG
+ iptables -A INPUT -p tcp -syn -m connlimit --connlimit-above 10 -j REJECT --reject-with tcp-rst
+ iptables -P INPUT DROP 
+
+
+ 79)  Install ipset 
+
+ apt update
+ apt install ipset
+ ipset help 
+
+
+ 80)  Create a set 
+
+ ipset -N myset hash:ip
+ ipset -A myset 1.1.1.1
+ ipset -A myset 2.2.2.2
+ ipset -A myset 3.3.3.3
+ iptables -A INPUT -m set --match-set myset src -j DROP 
+
+
+ 81)  Advanced Ipset 
+
+ #create a set
+ ipset -N china hash:net
+ ipset create romania hash:net -exist
+
+ #add entries
+ ipset -A china 1.0.0.0/8
+ ipset add china 2.0.0.0/8
+ ipset add china 2.0.0.0/8 -exist 
+
+ #list
+ ipset list
+ ipset -L
+
+ #delete
+ ipset del china 1.0.0.0/8
+ ipset -d china 2.0.0.0/8 
+
+ #delete all
+ ipset -F china
+ ipset -F 
+
+ #destroy a set
+ ipset -L china
+
+ ipset -X romania1
+ ipset -X
+ # set cannot be destroyed while there is a iptables rule referencing it
+
+ #show
+ iptables -vnL 
+ iptables -F
+
+ #delete all
+ ipset -X
+
+ #maxelem default 65535
+ ipset create myset hash:ip -maxelem 4096 
+
+
+ 82)  Adding entries in ipset dynamically 
+
+
+
+ ipset -X
+ ipset -N auto_blocked_ipset -exist
+ 
+ #instantly add the src ip of the incoming packet 
+ #in the auto_blocked_ipset 
+ iptables -I INPUT -p tcp --dport 80 -j set 
+  --add-set auto_blocked_ipset src 
+  
+ # refer the ipset in the iptables rule
+ iptables -I INPUT -m set --match-set auto_blocked_ipset src -j DROP
+
+ # list the ipset
+ ipset -L auto_blocked_ipset
+
+
+
+ 83)  Clear a running firewall
+
+
+  iptables -P INPUT ACCEPT
+ iptables -P OUTPUT ACCEPT
+ iptables -P FORWARD ACCEPT
+ 
+ iptables -t filter -F
+ iptables -t raw -F
+ iptables -t nat -F
+ iptables -t mangle -F
+ 
+ #delete all user defined iptables
+ iptables -X
+ 
+ # flush all sets
+ ipset -F
+ 
+ #destroy all sets
+ ipset -X
+ 
+ 
+
+
+ 84)  Create a ipsets list from a file
+ Then reference the list from a iptables rule
+
+
+ #bad_hosts.txt
+ 1.1.1.1
+ 2.2.2.2
+ 3.3.3.3
+ 9.9.9.0/8
+ 
+ #bash script
+ 
+ FILE="bad_hosts.txt"
+ 
+ ipset -N bad_hosts iphash -exist
+
+ ipset -F bad_hosts 
+ 
+ echo "Adding IPs from file to bad_hosts"
+ for ip in `cat $FILE`
+ do
+ 	ipset -A bad_hosts $Aip
+ 	echo -n $ip
+ done
+ 
+ echo -e -n "
+Dropping with iptables..."
+ 
+ iptables -I INPUT -m set --match-set bad_hosts src -j DROP
+ echo "Done"
+ 
+ #Check ips in the ipset
+ ipset -L bad_hosts
+
+
+
+
+ 85)  Allow traffic from a specific country
+ Drop traffic from other countries where we don't do business
+
+
+ iptables -vnL
+
+ # dropping all traffic originating from cn
+ block-cn.sh
+
+ echo "Blocking traffic"
+ echo
+ 
+ #create a ipset
+ ipset -N cn hash:net -exist
+ 
+ #flush
+ ipset -F cn
+ 
+ if [ -f "cn-aggr.zone"]
+ then
+ 	rm cn-aggr.zone
+ fi
+ 
+ #ipdeny.com to get the zone file
+ wget http://ipdeny...
+ 
+ if [ $? -eq 0 ]
+ then
+ 	echo "Download finished!"
+ fi
+ echo
+ echo -n "Adding networks to ipset..."
+ 
+ for net in `cat cn-aggr.zone`
+ do
+ 	ipset -A cn $net
+ done
+ 
+ #iptables rule to reference the ipset
+ iptables -I INPUT -m set --match-set cn src -j DROP
+ 
+
+
+
+ 86)  IPtables targets
+
+
+ 
+ target - action triggered when a packet meets the criteria of a rule
+ terminating target - accept or drop
+ non-terminating target - log or tee
+ 
+ # script
+ 
+ iptables -F
+ 
+ # terminating target
+ iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+ # all other tcp traffic dropped
+ iptables -A INPUT -p tcp -j DROP
+ 
+ # non-terminating target
+ iptables -A INPUT -p tcp --dport 22 -j LOG
+
+ # logged earlier , now drop it
+ iptables -A INPUT -p tcp -j DROP
+ 
+ # packets logged in /var/log/messages 
+ 
+
+
+
+ 87)  ACCEPT & DROP terminating targets
+
+
+ iptables -I OUTPUT -p udp --dport 53 
+
+
+
+
+ 88)  ICMP options for iptables
+
+ iptables -A INPUT  -p icmp --icmp-type echo-request -s 192.168.0.1 -j ACCEPT
+ iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+
+
+
+ 89)  TCP/UDP Ports
+
+ OPEN CLOSED FILTERED/STEALTH
+ OPEN - listening
+ CLOSED - responds with TCP Reset or ICMP Port Unreachable
+ FILTERED - drops the packet, does not respond back
+ 
+ port scanner cannot scan a filtered port
+ 
+
+
+
+ 90)  netstat nmap
+
+ netstat -tupan
+ n numeric a all t tcp u udp p port
+
+ nmap network security monitoring auditing tool
+ -sS ( SYN scan)
+ -sU ( UDP scan)
+ -sn or -sP ( ICMP scan)
+ 
+ nmap -sS -p 22,100 -sV 192.168.0.1
+ 
+ #tcp syn scan
+ nmap 192.168.0.20
+ nmap -sT 192.168.0.20
+ 
+ #sshd change the listening port to a non-standard port 50005
+ netstat -tupan | grep ssh
+
+ #nmap cannot discover it
+ nmap -p 20,22,80,50005 192.168.0.20 #cannot determine dthe service
+ 
+ nmap -p 80,50005 -sV 192.168.0.20 #shows the services running
+ 
+ nmap -p- 192.168.0.20 # scans all ports , very expensive
+ 
+ # udp port scanning
+ nmap -sU localhost
+ 
+ nmap -sn / or -sP 192.168.0.0/24 # displays all hosts that are up in this network
+
+
+
+ 91)  nmap - more options
+
+ 
+##** SCAN ONLY YOUR OWN HOSTS AND SERVERS !!! **##
+## Scanning Networks is your own responsibility ##
+ 
+# Syn Scan - Half Open Scanning (root only)
+nmap -sS 192.168.0.1
+ 
+# Connect Scan
+nmap -sT 192.168.0.1
+ 
+# Scanning all ports (0-65535)
+nmap -p- 192.168.0.1
+ 
+# Specifying the ports to scan
+nmap -p 20,22-100,443,1000-2000 192.168.0.1
+ 
+# Scan Version
+nmap -p 22,80 -sV 192.168.0.1
+ 
+# Ping scanning (entire Network)
+nmap -sP 192.168.0.0/24
+ 
+# Excluding an IP
+nmap -sS 192.168.0.0/24 --exclude 192.168.0.10
+ 
+# Saving the scanning report to a file
+nmap -oN output.txt 192.168.0.1
+ 
+# OS Detection
+nmap -O 192.168.0.1
+ 
+https://nmap.org/book/performance-timing-templates.html
+ 
+-T paranoid|sneaky|polite|normal|aggressive|insane (Set a timing template)
+These templates allow the user to specify how aggressive they wish to be, while leaving Nmap to pick the exact
+timing values. The templates also make some minor speed adjustments for which fine-grained control options do
+not currently exist.
+ 
+# -A OS and service detection with faster execution
+nmap -A -T aggressive cloudflare.com
+
+
+
+ 92)  REJECT Target
+
+ Responds wiht a ICMP Port Unreachable
+ Dropping packets will cause TCP to retransmit the packets
+ With a response, the retransmissions will stop
+ 
+ iptables -I FORWARD -p udp --dport 69 -j REJECT --reject-with-icmp-port-unreachable
+ 
+ # Help
+ iptables -J REJECT --help
+ 
+
+
+
+ 93)  70
+
+ 70
+
+
+ 94)  LOG non terminating target
+
+ iptables -A INPUT -p tcp --dport 22 -syn -j LOG --log-prefix="incoming ssh:" 
+    --log-level info
+  /var/log/kern.log
+
+
+
+ 95)  REJECT and LOG targets
+
+ #!/bin/bash
+ 
+iptables -F
+ 
+ 
+## See all REJECT packets: iptables -j REJECT --help
+ 
+# logging the first packet (tcp syn set) of any incoming ssh connection
+# use the prefix: ###ssh:
+iptables -A INPUT -p tcp --syn --dport 22 -j LOG --log-prefix="##ssh:" --log-level info
+ 
+# Then reject any incoming ssh packet and send back a tcp-reset to the source
+iptables -A INPUT -p tcp --dport 22 -j REJECT --reject-with tcp-reset
+ 
+ 
+# logging only 10 incoming ICMP ping packets per minute
+iptables -A INPUT -p icmp --icmp-type echo-request -m limit --limit 10/minute -j LOG --log-prefix="ping probe:"
+ 
+# reject all incoming ICMP ping packets that are not coming from 10.0.0.1 (management station)
+iptables -A INPUT ! -s 10.0.0.1 -p icmp --icmp-type echo-request -j REJECT --reject-with admin-prohib
+
+
+
+ 96)  TEE target Clone and Redirect traffic 
+
+ iptables -A FORWARD -i eth0 -o eth1 -p tcp 80.0.0.1 -j TEE --gateway 10.0.0.10 
+ iptables -A INPUT -p icmp --icmp-type echo-request -j TEE --gateway 192.168.0.20
+
+
+
+
+ 97)  REDIRECT target on the same machine / to different port
+
+ iptables -t NAT -A PREOROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
+ iptables -t NAT -A PREROUTING -p tcp --dport 1234 -j REDIRECT --to-ports 22
+ 
+ no application will listen on 1234
+ netstat will not show the listening port
+ ssh ip 1234 will work
+
+
+
+ 98)  Write the iptables commands that display the help for REJECT and LOG targets. 
+
+ 
+
+
+ 99)  Write an iptables rule that REJECTS all incoming packets to port tcp/25 and sends back to the source a tcp-reset packet. 
+
+ 
+
+
+ 100)  Write the iptables rules that log and then REJECT the headers of all incoming SSH (tcp/22) packets. Prefix each log line with: ssh in:
+
+Generate incoming ssh traffic and display the logs. Filter the logs by log prefix.
+
+ 
+
+
+ 101)  Change the solution of Challenge #3 and LOG only the first packet of the connection (syn bit set). Deny all packets.
+
+ 
+
+
+ 102)  Change the solution of Challenge #4 and LOG at most 1 packet per second. Deny all packets.
+
+ 
+
+
+ 103)  Change the solution of Challenge #4 and LOG at most 1 packet per second. Deny all packets.
+Using the netstat command list all open ports and established connections (sockets)  of both TCP and UDP protocols both on Linux and Windows.
+
+
+ 
+
+
+ 104)  Using nmap scan ports 22,25,80 and 443 on 10.0.0.1 (replace it with an IP from you Network).
+
+ 
+
+
+ 105)  Using nmap scan ports 22,25,80 and 443 and service versions on 10.0.0.1 (replace it with an IP from you Network).
+
+ 
+
+
+ 106)  You want to mirror all TCP traffic that arrives at 10.0.0.10 to 10.0.0.1.
+
+What iptables rule on 10.0.0.10 accomplishes that?
+
+
+ 
+
+
+ 107)  You want to redirect incoming TCP traffic to port 80 to port 8080 on the same host where a Proxy is running.
+
+What iptables rule accomplishes that?
+
+ 
+
+
+ 108)  
+
+ 
+
+
+ 109)  Change the solution of Challenge #4 and LOG at most 1 packet per second. Deny all packets.
+Using the netstat command list all open ports and established connections (sockets)  of both TCP and UDP protocols both on Linux and Windows.
+
+
+ 
