@@ -1,0 +1,75 @@
+1] install docker, enable, start docker server, run docker container
+
+	- yum update && curl -sSL https://get.docker.com/ | sh
+
+	- systemctl enable docker && systemctl start docker
+
+	- docker run hello-world
+
+2] Running wordpress
+
+	- docker run --restart=always 
+		--name wordpressdb 
+		-e MYSQL_ROOT_PASSWORD=<PASSWORD> 
+		-e MYSQL_DATABASE=wordpress 
+		-d mysql:5.7
+ 
+	- docker run --restart=always 
+		-e WORDPRESS_DB_PASSWORD=<password> 
+		-d --name wordpress 
+		--link wordpressdb:mysql 
+		-p 8080:80 wordpress
+
+	- docker ps
+
+	- docker inspect wordpress
+
+	- docker logs -f wordpress
+
+	- http://<IP ADDRESS OF DOCKER SERVER>:8080/
+
+	- docker start container-id
+
+	- docker stop container-id
+
+	- docker rm container-id
+
+	- docker exec -it container-id /bin/bash
+
+3] Dockerfile
+
+	- mkdir -p ~/johndoe/centos7-expressjs
+
+	- cd $_; vi Dockerfile
+
+	- Dockerfile
+
+		FROM centos:centos7
+		RUN yum install -y epel-release;yum install -y npm;
+		RUN npm install express --save
+		COPY . ./src
+		EXPOSE 8080
+		CMD ["node", "/src/index.js"]
+
+	- vi index.js
+
+	- index.js
+
+		var express = require('express'), app = express();
+		app.get('/', function (req, res) {res.send('Hello CentOS 7 cookbook!\n');});
+		app.listen(8080);
+
+	- docker build -t johndoe/centos7-expressjs .
+
+	- docker run -p 8081:8080 -d johndoe/centos7-expressjs
+
+	- make a http request
+
+	curl -i localhost:8081
+
+	- docker login
+
+	- docker push johndoe/centos7-expressjs
+
+	- docker search expressjs
+
